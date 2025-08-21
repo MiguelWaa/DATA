@@ -1,0 +1,27 @@
+USE TiendaDB;
+GO
+
+-- Verifica si la tabla Usuarios ya existe
+IF OBJECT_ID('Usuarios', 'U') IS NULL
+BEGIN
+    CREATE TABLE Usuarios (
+        UsuarioID INT PRIMARY KEY IDENTITY(1,1),
+        Nombre NVARCHAR(50) NOT NULL,
+        Email NVARCHAR(100) NOT NULL UNIQUE,
+        FechaRegistro DATETIME DEFAULT GETDATE()
+    );
+END
+GO
+
+-- Verifica si la tabla Pedidos ya existe
+IF OBJECT_ID('Pedidos', 'U') IS NULL
+BEGIN
+    CREATE TABLE Pedidos (
+        PedidoID INT PRIMARY KEY IDENTITY(1,1),
+        UsuarioID INT NOT NULL,
+        FechaPedido DATETIME DEFAULT GETDATE(),
+        Monto DECIMAL(10,2) NOT NULL,
+        CONSTRAINT FK_UsuarioPedido FOREIGN KEY (UsuarioID) REFERENCES Usuarios(UsuarioID)
+    );
+END
+GO
