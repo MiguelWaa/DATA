@@ -1,0 +1,39 @@
+CREATE DATABASE tienda_db;
+USE tienda_db;
+
+-- Crear tabla clientes
+CREATE TABLE clientes (
+    cliente_id INT AUTO_INCREMENT PRIMARY KEY, -- llave primaria
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(150) UNIQUE
+);
+
+-- Crear tabla pedidos
+CREATE TABLE pedidos (
+    pedido_id INT AUTO_INCREMENT PRIMARY KEY,  -- llave primaria
+    fecha DATE NOT NULL,
+    monto DECIMAL(10,2) NOT NULL,
+    cliente_id INT,  -- llave foránea
+
+    -- Definir la relación con clientes
+    CONSTRAINT fk_cliente
+        FOREIGN KEY (cliente_id) REFERENCES clientes(cliente_id)
+        ON DELETE CASCADE   -- si se borra un cliente, se borran sus pedidos
+        ON UPDATE CASCADE   -- si cambia el id de cliente, se actualiza en pedidos
+);
+
+-- Insertar clientes
+INSERT INTO clientes (nombre, correo) VALUES
+('Danna', 'danna@email.com'),
+('Carlos', 'carlos@email.com');
+
+-- Insertar pedidos (usando cliente_id como foránea)
+INSERT INTO pedidos (fecha, monto, cliente_id) VALUES
+('2025-09-01', 250.00, 1), -- Pedido de Danna
+('2025-09-02', 100.50, 2), -- Pedido de Carlos
+('2025-09-03', 75.99, 1);  -- Otro pedido de Danna
+
+-- Consultar pedidos con los nombres de clientes (JOIN)
+SELECT p.pedido_id, c.nombre, p.fecha, p.monto
+FROM pedidos p
+INNER JOIN clientes c ON p.cliente_id = c.cliente_id;
