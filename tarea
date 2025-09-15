@@ -1,0 +1,100 @@
+-- Crear base de datos
+CREATE DATABASE SistemaVentas;
+USE SistemaVentas;
+
+-- =======================
+-- TABLA CLIENTES
+-- =======================
+CREATE TABLE Clientes (
+    cliente_id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    telefono VARCHAR(20),
+    direccion VARCHAR(200),
+    fecha_registro DATE DEFAULT CURRENT_DATE
+);
+
+-- =======================
+-- TABLA EMPLEADOS
+-- =======================
+CREATE TABLE Empleados (
+    empleado_id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    cargo VARCHAR(50),
+    sueldo DECIMAL(10,2),
+    fecha_contrato DATE DEFAULT CURRENT_DATE
+);
+
+-- =======================
+-- TABLA PROVEEDORES
+-- =======================
+CREATE TABLE Proveedores (
+    proveedor_id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    contacto VARCHAR(100),
+    telefono VARCHAR(20),
+    direccion VARCHAR(200)
+);
+
+-- =======================
+-- TABLA PRODUCTOS
+-- =======================
+CREATE TABLE Productos (
+    producto_id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    precio DECIMAL(10,2) NOT NULL,
+    stock INT DEFAULT 0,
+    proveedor_id INT,
+    FOREIGN KEY (proveedor_id) REFERENCES Proveedores(proveedor_id)
+);
+
+-- =======================
+-- TABLA PEDIDOS (VENTAS)
+-- =======================
+CREATE TABLE Pedidos (
+    pedido_id INT AUTO_INCREMENT PRIMARY KEY,
+    cliente_id INT NOT NULL,
+    empleado_id INT NOT NULL,
+    fecha DATE DEFAULT CURRENT_DATE,
+    total DECIMAL(10,2),
+    estado ENUM('Pendiente','Pagado','Cancelado') DEFAULT 'Pendiente',
+    FOREIGN KEY (cliente_id) REFERENCES Clientes(cliente_id),
+    FOREIGN KEY (empleado_id) REFERENCES Empleados(empleado_id)
+);
+
+-- =======================
+-- TABLA DETALLE DE PEDIDOS
+-- =======================
+CREATE TABLE DetallePedidos (
+    detalle_id INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id INT NOT NULL,
+    producto_id INT NOT NULL,
+    cantidad INT NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (pedido_id) REFERENCES Pedidos(pedido_id),
+    FOREIGN KEY (producto_id) REFERENCES Productos(producto_id)
+);
+
+-- =======================
+-- TABLA PAGOS
+-- =======================
+CREATE TABLE Pagos (
+    pago_id INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id INT NOT NULL,
+    fecha_pago DATE DEFAULT CURRENT_DATE,
+    monto DECIMAL(10,2) NOT NULL,
+    metodo_pago ENUM('Efectivo','Tarjeta','Transferencia'),
+    FOREIGN KEY (pedido_id) REFERENCES Pedidos(pedido_id)
+);
+
+-- =======================
+-- TABLA INVENTARIO (Movimientos)
+-- =======================
+CREATE TABLE Inventario (
+    movimiento_id INT AUTO_INCREMENT PRIMARY KEY,
+    producto_id INT NOT NULL,
+    tipo ENUM('Entrada','Salida') NOT NULL,
+    cantidad INT NOT NULL,
+    fecha DATE DEFAULT CURRENT_DATE,
+    FOREIGN KEY (producto_id) REFERENCES Productos(producto_id)
+);
