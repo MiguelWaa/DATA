@@ -1,0 +1,90 @@
+-- Crear tabla categorias
+CREATE TABLE categorias (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre VARCHAR(100) UNIQUE
+);
+
+-- Insertar datos en categorias
+INSERT INTO categorias (nombre) 
+VALUES ('Materiales'), 
+       ('Mano de obra'), 
+       ('Transporte');
+
+-- Crear tabla costos
+CREATE TABLE costos (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    descripcion VARCHAR(255),
+    categoria VARCHAR(100),
+    costo_unitario DECIMAL(10, 2),
+    cantidad INT,
+    total AS (costo_unitario * cantidad) PERSISTED,
+    fecha DATE
+);
+
+-- Insertar datos en costos
+INSERT INTO costos (descripcion, categoria, costo_unitario, cantidad, fecha) 
+VALUES 
+('Pintura de muros', 'Materiales', 150.00, 10, '2025-09-18'),
+('Pago a albañil', 'Mano de obra', 200.00, 5, '2025-09-19'),
+('Transporte materiales', 'Transporte', 50.00, 20, '2025-09-20'),
+('Compra cemento', 'Materiales', 100.00, 15, '2025-09-21'),
+('Servicio limpieza', 'Servicios', 80.00, 3, '2025-09-22'); -- 'Servicios' no está en categorias
+
+-- 1. Uso de EXISTS: Mostrar costos donde la categoría existe en categorias
+SELECT * 
+FROM costos c
+WHERE EXISTS (
+    SELECT 1 FROM categorias cat WHERE cat.nombre = c.categoria
+);
+
+-- 2. Uso de NOT EXISTS: Mostrar costos donde la categoría NO existe en categorias
+SELECT * 
+FROM costos c
+WHERE NOT EXISTS (
+    SELECT 1 FROM categorias cat WHERE cat.nombre = c.categoria
+);
+
+-- 3. Uso de IN: Mostrar costos de Materiales y Transporte
+SELECT * 
+FROM costos
+WHERE categoria IN ('Materiales', 'Transporte');
+
+-- 4. INNER JOIN: Mostrar costos con su categoría (solo si existe)
+SELECT c.id, c.descripcion, c.costo_unitario, c.cantidad, c.total, cat.nombre AS categoria
+FROM costos c
+INNER JOIN categorias cat ON c.categoria = cat.nombre;
+
+-- 5. LEFT JOIN: Mostrar todos los costos y su categoría si existe
+SELECT c.id, c.descripcion, c.costo_unitario, c.cantidad, c.total, cat.nombre AS categoria
+FROM costos c
+LEFT JOIN categorias cat ON c.categoria = cat.nombre;
+
+-- 6. RIGHT JOIN: Mostrar todas las categorías y sus costos si existen
+SELECT c.id, c.descripcion, c.costo_unitario, c.cantidad, c.total, cat.nombre AS categoria
+FROM costos c
+RIGHT JOIN categorias cat ON c.categoria = cat.nombre;
+
+-- 7. FULL JOIN emulado: Mostrar todos los costos y categorías combinados, con NULL donde no hay coincidencia
+SELECT c.id, c.descripcion, c.costo_unitario, c.cantidad, c.total, cat.nombre AS categoria
+FROM costos c
+LEFT JOIN categorias cat ON c.categoria = cat.nombre
+
+UNION
+
+SELECT c.id, c.descripcion, c.costo_unitario, c.cantidad, c.total, cat.nombre AS categoria
+FROM costos c
+RIGHT JOIN categorias cat ON c.categoria = cat.nombre;
+
+-- 8. CROSS JOIN: Producto cartesiano entre costos y categorías
+SELECT c.descripcion, cat.nombre AS categoria
+FROM costos c
+CROSS JOIN categorias cat;
+
+-- 9. UNION: Supongamos que hay otra tabla costos_archivados con estructura similar (aquí simulado con misma tabla)
+SELECT descripcion, categoria, costo_unitario, cantidad, total, fecha
+FROM costos
+
+UNION
+
+SELECT descripcion, categoria, costo_unitario, cantidad, total, fecha
+FROM costos;
