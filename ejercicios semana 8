@@ -1,0 +1,264 @@
+-- ===============================================
+-- BASE DE DATOS COMPLETA: SISTEMA EMPRESARIAL
+-- ===============================================
+
+CREATE DATABASE TiendaDB;
+GO
+USE TiendaDB;
+GO
+
+-- ===============================================
+-- TABLA SUCURSALES
+-- ===============================================
+CREATE TABLE Sucursales (
+    SucursalID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    Direccion NVARCHAR(200),
+    Ciudad NVARCHAR(50),
+    Telefono NVARCHAR(20)
+);
+
+-- ===============================================
+-- TABLA USUARIOS
+-- ===============================================
+CREATE TABLE Usuarios (
+    UsuarioID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(50) NOT NULL,
+    Apellido NVARCHAR(50) NOT NULL,
+    Email NVARCHAR(100) NOT NULL UNIQUE,
+    Telefono NVARCHAR(20),
+    Direccion NVARCHAR(200),
+    TipoUsuario NVARCHAR(20) CHECK (TipoUsuario IN ('Cliente','Empleado','Administrador')),
+    FechaRegistro DATETIME DEFAULT GETDATE(),
+    SucursalID INT NULL,
+    FOREIGN KEY (SucursalID) REFERENCES Sucursales(SucursalID)
+);
+
+-- ===============================================
+-- TABLA EMPLEADOS
+-- ===============================================
+CREATE TABLE Empleados (
+    EmpleadoID INT PRIMARY KEY IDENTITY(1,1),
+    UsuarioID INT NOT NULL,
+    Cargo NVARCHAR(50) NOT NULL,
+    Salario DECIMAL(10,2) NOT NULL,
+    FechaContratacion DATE DEFAULT GETDATE(),
+    FOREIGN KEY (UsuarioID) REFERENCES Usuarios(UsuarioID)
+);
+
+-- ===============================================
+-- TABLA CATEGORÍAS
+-- ===============================================
+CREATE TABLE Categorias (
+    CategoriaID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(50) NOT NULL,
+    Descripcion NVARCHAR(200)
+);
+
+-- ===============================================
+-- TABLA PRODUCTOS
+-- ===============================================
+CREATE TABLE Productos (
+    ProductoID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    Descripcion NVARCHAR(255),
+    Precio DECIMAL(10,2) NOT NULL,
+    Stock INT NOT NULL,
+    CategoriaID INT,
+    Activo BIT DEFAULT 1,
+    FOREIGN KEY (CategoriaID) REFERENCES Categorias(CategoriaID)
+);
+
+-- ===============================================
+-- TABLA PROVEEDORES
+-- ===============================================
+CREATE TABLE Proveedores (
+    ProveedorID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    Telefono NVARCHAR(20),
+    Email NVARCHAR(100),
+    Direccion NVARCHAR(200)
+);
+
+-- ===============================================
+-- TABLA COMPRAS
+-- ===============================================
+CREATE TABLE Compras (
+    CompraID INT PRIMARY KEY IDENTITY(1,1),
+    ProveedorID INT NOT NULL,
+    EmpleadoID INT NOT NULL,
+    FechaCompra DATETIME DEFAULT GETDATE(),
+    Total DECIMAL(10,2),
+    FOREIGN KEY (ProveedorID) REFERENCES Proveedores(ProveedorID),
+    FOREIGN KEY (EmpleadoID) REFERENCES Empleados(EmpleadoID)
+);
+
+CREATE TABLE DetalleCompras (
+    DetalleCompraID INT PRIMARY KEY IDENTITY(1,1),
+    CompraID INT NOT NULL,
+    ProductoID INT NOT NULL,
+    Cantidad INT NOT NULL,
+    PrecioCompra DECIMAL(10,2) NOT NULL,
+    Subtotal AS (Cantidad * PrecioCompra) PERSISTED,
+    FOREIGN KEY (CompraID) REFERENCES Compras(CompraID),
+    FOREIGN KEY (ProductoID) REFERENCES Productos(ProductoID)
+);
+
+-- ===============================================
+-- TABLAS DE VENTAS
+-- ===============================================
+CREATE TABLE Pedidos (
+    PedidoID INT PRIMARY KEY IDENTITY(1,1),
+    UsuarioID INT NOT NULL,
+    FechaPedido DATETIME DEFAULT GETDATE(),
+    Estado NVARCHAR(20) CHECK (Estado IN ('Pendiente','Pagado','Enviado','Entregado','Cancelado')),
+    DireccionEnvio NVARCHAR(200),
+    Total DECIMAL(10,2),
+    FOREIGN KEY (UsuarioID) REFERENCES Usuarios(UsuarioID)
+);
+
+CREATE TABLE DetallePedidos (
+    DetalleID INT PRIMARY KEY IDENTITY(1,1),
+    PedidoID INT NOT NULL,
+    ProductoID INT NOT NULL,
+    Cantidad INT NOT NULL,
+    PrecioUnitario DECIMAL(10,2) NOT NULL,
+    Subtotal AS (Cantidad * PrecioUnitario) PERSISTED,
+    FOREIGN KEY (PedidoID) REFERENCES Pedidos(PedidoID),
+    FOREIGN KEY (ProductoID) REFERENCES Productos(ProductoID)
+);
+
+CREATE TABLE Pagos (
+    PagoID INT PRIMARY KEY IDENTITY(1,1),
+    PedidoID INT NOT NULL,
+    Monto DECIMAL(10,2) NOT NULL,
+    MetodoPago NVARCHAR(20) CHECK (MetodoPago IN ('Efectivo','Tarjeta','Transferencia','Yape','Plin')),
+    FechaPago DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (PedidoID) REFERENCES Pedidos(PedidoID)
+);
+
+-- ===============================================
+-- TABLA ENVÍOS
+-- ===============================================
+CREATE TABLE Envios (
+    EnvioID INT PRIMARY KEY IDENTITY(1,1),
+    PedidoID INT NOT NULL,
+    EmpresaEnvio NVARCHAR(100),
+    CodigoSeguimiento NVARCHAR(50),
+    FechaEnvio DATETIME,
+    FechaEntrega DATETIME,
+    FOREIGN KEY (PedidoID) REFERENCES Pedidos(PedidoID)
+);
+
+-- ===============================================
+-- TABLA CUPONES Y DESCUENTOS
+-- ===============================================
+CREATE TABLE Cupones (
+    CuponID INT PRIMARY KEY IDENTITY(1,1),
+    Codigo NVARCHAR(20) UNIQUE,
+    DescuentoPorc DECIMAL(5,2) CHECK (DescuentoPorc BETWEEN 0 AND 100),
+    FechaExpiracion DATE
+);
+
+-- ===============================================
+-- TABLA RESEÑAS DE PRODUCTOS
+-- ===============================================
+CREATE TABLE Reseñas (
+    ReseñaID INT PRIMARY KEY IDENTITY(1,1),
+    ProductoID INT NOT NULL,
+    UsuarioID INT NOT NULL,
+    Calificacion INT CHECK (Calificacion BETWEEN 1 AND 5),
+    Comentario NVARCHAR(255),
+    Fecha DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (ProductoID) REFERENCES Productos(ProductoID),
+    FOREIGN KEY (UsuarioID) REFERENCES Usuarios(UsuarioID)
+);
+
+-- ===============================================
+-- TRIGGER: ACTUALIZACIÓN AUTOMÁTICA DE STOCK
+-- ===============================================
+CREATE TRIGGER trg_ActualizarStock
+ON DetallePedidos
+AFTER INSERT
+AS
+BEGIN
+    UPDATE Productos
+    SET Stock = Stock - i.Cantidad
+    FROM Productos p
+    INNER JOIN inserted i ON p.ProductoID = i.ProductoID;
+END;
+
+-- ===============================================
+-- STORED PROCEDURE: CREAR PEDIDO RÁPIDO
+-- ===============================================
+CREATE PROCEDURE sp_CrearPedido
+    @UsuarioID INT,
+    @ProductoID INT,
+    @Cantidad INT
+AS
+BEGIN
+    DECLARE @Precio DECIMAL(10,2);
+    SELECT @Precio = Precio FROM Productos WHERE ProductoID = @ProductoID;
+    
+    INSERT INTO Pedidos (UsuarioID, Estado, Total)
+    VALUES (@UsuarioID, 'Pendiente', @Precio * @Cantidad);
+
+    DECLARE @PedidoID INT = SCOPE_IDENTITY();
+
+    INSERT INTO DetallePedidos (PedidoID, ProductoID, Cantidad, PrecioUnitario)
+    VALUES (@PedidoID, @ProductoID, @Cantidad, @Precio);
+
+    SELECT @PedidoID AS 'NuevoPedido';
+END;
+
+-- ===============================================
+-- VISTA: REPORTE DE VENTAS POR PRODUCTO
+-- ===============================================
+CREATE VIEW vw_VentasPorProducto AS
+SELECT p.ProductoID, p.Nombre, SUM(d.Cantidad) AS TotalVendido, SUM(d.Subtotal) AS TotalIngresos
+FROM DetallePedidos d
+INNER JOIN Productos p ON d.ProductoID = p.ProductoID
+GROUP BY p.ProductoID, p.Nombre;
+
+-- ===============================================
+-- INSERTAR DATOS DE EJEMPLO
+-- ===============================================
+INSERT INTO Sucursales (Nombre, Direccion, Ciudad, Telefono) VALUES
+('Sucursal Centro','Av. Principal 123','Lima','987111222'),
+('Sucursal Norte','Av. Industrial 456','Trujillo','987333444');
+
+INSERT INTO Usuarios (Nombre, Apellido, Email, Telefono, Direccion, TipoUsuario, SucursalID) VALUES
+('Juan','Pérez','juanperez@email.com','987654321','Av. Los Olivos 123','Cliente',1),
+('María','López','marialopez@email.com','912345678','Jr. Las Flores 456','Cliente',1),
+('Carlos','Ramírez','carlos@email.com','976543210','Calle Lima 789','Empleado',1),
+('Laura','Mendoza','laura@email.com','912111222','Av. Perú 890','Administrador',2);
+
+INSERT INTO Empleados (UsuarioID, Cargo, Salario) VALUES
+(3,'Vendedor',2000.00),
+(4,'Gerente',5000.00);
+
+INSERT INTO Categorias (Nombre, Descripcion) VALUES
+('Electrónica','Dispositivos electrónicos y gadgets'),
+('Ropa','Prendas de vestir'),
+('Hogar','Artículos para el hogar'),
+('Deportes','Artículos deportivos');
+
+INSERT INTO Productos (Nombre, Descripcion, Precio, Stock, CategoriaID) VALUES
+('Laptop Lenovo','Laptop Core i5 8GB RAM', 2500.00, 20, 1),
+('Auriculares Bluetooth','Auriculares inalámbricos con micrófono', 150.00, 50, 1),
+('Polo Algodón','Polo blanco talla M', 35.00, 100, 2),
+('Silla Oficina','Silla ergonómica', 300.00, 15, 3),
+('Balón Fútbol','Balón oficial talla 5', 120.00, 40, 4);
+
+INSERT INTO Proveedores (Nombre, Telefono, Email, Direccion) VALUES
+('TechImport','987654111','contacto@techimport.com','Av. Tecnológica 101'),
+('ModaPerú','912999888','ventas@modaperu.com','Jr. Moda 202');
+
+-- Compra de inventario
+INSERT INTO Compras (ProveedorID, EmpleadoID, Total) VALUES (1,1,25000.00);
+INSERT INTO DetalleCompras (CompraID, ProductoID, Cantidad, PrecioCompra) VALUES
+(1,1,10,2000.00),
+(1,2,50,100.00);
+
+-- Pedido de ejemplo
+EXEC sp_CrearPedido @UsuarioID=1, @ProductoID=1, @Cantidad=2;
