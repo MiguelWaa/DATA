@@ -1,0 +1,79 @@
+-- Crear la base de datos
+CREATE DATABASE TiendaOnline;
+USE TiendaOnline;
+
+-- Tabla de usuarios
+CREATE TABLE Usuarios (
+    UsuarioID INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) NOT NULL UNIQUE,
+    PasswordHash VARCHAR(255) NOT NULL,
+    FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de productos
+CREATE TABLE Productos (
+    ProductoID INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(100) NOT NULL,
+    Descripcion TEXT,
+    Precio DECIMAL(10,2) NOT NULL,
+    Stock INT NOT NULL,
+    Categoria VARCHAR(50),
+    FechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de pedidos
+CREATE TABLE Pedidos (
+    PedidoID INT AUTO_INCREMENT PRIMARY KEY,
+    UsuarioID INT,
+    FechaPedido DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Estado ENUM('Pendiente','Pagado','Enviado','Cancelado') DEFAULT 'Pendiente',
+    Total DECIMAL(10,2),
+    FOREIGN KEY (UsuarioID) REFERENCES Usuarios(UsuarioID)
+);
+
+-- Tabla de detalle de pedidos
+CREATE TABLE DetallePedido (
+    DetalleID INT AUTO_INCREMENT PRIMARY KEY,
+    PedidoID INT,
+    ProductoID INT,
+    Cantidad INT NOT NULL,
+    PrecioUnitario DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (PedidoID) REFERENCES Pedidos(PedidoID),
+    FOREIGN KEY (ProductoID) REFERENCES Productos(ProductoID)
+);
+
+-- Tabla de pagos
+CREATE TABLE Pagos (
+    PagoID INT AUTO_INCREMENT PRIMARY KEY,
+    PedidoID INT,
+    Monto DECIMAL(10,2) NOT NULL,
+    MetodoPago ENUM('Tarjeta','Transferencia','Efectivo','Yape','Plin'),
+    FechaPago DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (PedidoID) REFERENCES Pedidos(PedidoID)
+);
+
+-- Insertar datos de ejemplo en Usuarios
+INSERT INTO Usuarios (Nombre, Email, PasswordHash) VALUES
+('Juan Pérez', 'juan@example.com', 'hash123'),
+('María López', 'maria@example.com', 'hash456'),
+('Carlos Ramos', 'carlos@example.com', 'hash789');
+
+-- Insertar datos de ejemplo en Productos
+INSERT INTO Productos (Nombre, Descripcion, Precio, Stock, Categoria) VALUES
+('Laptop Lenovo', 'Laptop 15 pulgadas, 8GB RAM, 256GB SSD', 2500.00, 10, 'Tecnología'),
+('Mouse Inalámbrico', 'Mouse inalámbrico recargable', 80.00, 50, 'Accesorios'),
+('Audífonos Bluetooth', 'Audífonos con cancelación de ruido', 150.00, 20, 'Accesorios');
+
+-- Crear un pedido de ejemplo
+INSERT INTO Pedidos (UsuarioID, Estado, Total) VALUES
+(1, 'Pagado', 2580.00);
+
+-- Agregar detalle del pedido
+INSERT INTO DetallePedido (PedidoID, ProductoID, Cantidad, PrecioUnitario) VALUES
+(1, 1, 1, 2500.00),
+(1, 2, 1, 80.00);
+
+-- Registrar pago
+INSERT INTO Pagos (PedidoID, Monto, MetodoPago) VALUES
+(1, 2580.00, 'Tarjeta');
