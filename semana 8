@@ -1,0 +1,116 @@
+-- 1. Crear la base de datos y usarla
+CREATE DATABASE IF NOT EXISTS empresa;
+USE empresa;
+
+-- 2. Crear tablas relacionadas
+
+CREATE TABLE IF NOT EXISTS departamentos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100)
+);
+
+CREATE TABLE IF NOT EXISTS empleados (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100),
+    edad INT,
+    puesto VARCHAR(100),
+    salario DECIMAL(10, 2),
+    departamento_id INT,
+    FOREIGN KEY (departamento_id) REFERENCES departamentos(id)
+);
+
+CREATE TABLE IF NOT EXISTS proyectos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100),
+    presupuesto DECIMAL(10, 2)
+);
+
+CREATE TABLE IF NOT EXISTS asignaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    empleado_id INT,
+    proyecto_id INT,
+    fecha_inicio DATE,
+    fecha_fin DATE,
+    FOREIGN KEY (empleado_id) REFERENCES empleados(id),
+    FOREIGN KEY (proyecto_id) REFERENCES proyectos(id)
+);
+
+-- 3. Insertar datos en las tablas
+
+INSERT INTO departamentos (nombre) VALUES 
+('Desarrollo'),
+('Marketing'),
+('Recursos Humanos');
+
+INSERT INTO empleados (nombre, edad, puesto, salario, departamento_id) VALUES 
+('Juan Pérez', 28, 'Desarrollador', 35000.00, 1),
+('María López', 32, 'Diseñadora', 40000.00, 1),
+('Carlos García', 25, 'Analista', 30000.00, 2),
+('Laura Gómez', 27, 'Jefa de Marketing', 45000.00, 2),
+('Ana Sánchez', 30, 'Recursos Humanos', 38000.00, 3);
+
+INSERT INTO proyectos (nombre, presupuesto) VALUES
+('Proyecto A', 150000.00),
+('Proyecto B', 120000.00),
+('Proyecto C', 200000.00);
+
+INSERT INTO asignaciones (empleado_id, proyecto_id, fecha_inicio, fecha_fin) VALUES
+(1, 1, '2025-01-01', '2025-12-31'),
+(2, 1, '2025-02-01', '2025-12-31'),
+(3, 2, '2025-03-01', '2025-06-30'),
+(4, 3, '2025-04-01', '2025-10-31'),
+(5, 3, '2025-05-01', '2025-11-30');
+
+-- 4. Consultas útiles
+
+-- a) Empleados con su departamento
+SELECT e.nombre AS empleado, e.puesto, e.salario, d.nombre AS departamento
+FROM empleados e
+JOIN departamentos d ON e.departamento_id = d.id;
+
+-- b) Empleados asignados al "Proyecto A"
+SELECT e.nombre AS empleado, e.puesto, p.nombre AS proyecto
+FROM empleados e
+JOIN asignaciones a ON e.id = a.empleado_id
+JOIN proyectos p ON a.proyecto_id = p.id
+WHERE p.nombre = 'Proyecto A';
+
+-- c) Salario promedio por departamento
+SELECT d.nombre AS departamento, AVG(e.salario) AS salario_promedio
+FROM empleados e
+JOIN departamentos d ON e.departamento_id = d.id
+GROUP BY d.nombre;
+
+-- d) Total de presupuesto por proyecto
+SELECT nombre AS proyecto, presupuesto AS total_presupuesto
+FROM proyectos;
+
+-- e) Empleados que trabajan en más de un proyecto
+SELECT e.nombre AS empleado, COUNT(a.proyecto_id) AS proyectos_asignados
+FROM empleados e
+JOIN asignaciones a ON e.id = a.empleado_id
+GROUP BY e.nombre
+HAVING COUNT(a.proyecto_id) > 1;
+
+-- f) Costo total de cada proyecto (presupuesto + salarios)
+SELECT p.nombre AS proyecto, 
+       p.presupuesto AS total_presupuesto, 
+       SUM(e.salario) AS total_salarios
+FROM proyectos p
+JOIN asignaciones a ON p.id = a.proyecto_id
+JOIN empleados e ON a.empleado_id = e.id
+GROUP BY p.nombre;
+
+-- 5. Actualizaciones y eliminaciones
+
+-- Aumentar salario de Juan Pérez en un 10%
+UPDATE empleados
+SET salario = salario * 1.1
+WHERE nombre = 'Juan Pérez';
+
+-- Eliminar el proyecto 'Proyecto C'
+DELETE FROM proyectos WHERE nombre = 'Proyecto C';
+
+-- Consultar para verificar cambios
+SELECT * FROM empleados;
+SELECT * FROM proyectos;
