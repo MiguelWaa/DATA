@@ -1,0 +1,32 @@
+-- Crear la base de datos
+CREATE DATABASE MiBaseDeDatos;
+
+-- Usar la base de datos creada
+USE MiBaseDeDatos;
+
+-- Crear una tabla llamada Clientes
+CREATE TABLE Clientes (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    Nombre VARCHAR(50),
+    Apellido VARCHAR(50),
+    Email VARCHAR(100),
+    FechaRegistro DATE
+);
+
+-- Insertar algunos registros en la tabla Clientes
+INSERT INTO Clientes (Nombre, Apellido, Email, FechaRegistro)
+VALUES 
+('Juan', 'Pérez', 'juan.perez@email.com', '2023-01-15'),
+('Ana', 'García', 'ana.garcia@email.com', '2023-02-10');
+
+-- Consultar todos los registros de Clientes
+SELECT * FROM Clientes;
+
+-- Actualizar el email de un cliente
+UPDATE Clientes
+SET Email = 'juan.nuevo@email.com'
+WHERE Id = 1;
+
+-- Borrar un cliente por Id
+DELETE FROM Clientes
+WHERE Id = 2;
