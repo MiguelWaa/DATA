@@ -1,0 +1,59 @@
+-- Crear base de datos
+CREATE DATABASE TiendaDB;
+USE TiendaDB;
+
+-- Tabla de clientes
+CREATE TABLE Clientes (
+    cliente_id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    telefono VARCHAR(20),
+    direccion VARCHAR(150)
+);
+
+-- Tabla de productos
+CREATE TABLE Productos (
+    producto_id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    precio DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL
+);
+
+-- Tabla de pedidos
+CREATE TABLE Pedidos (
+    pedido_id INT PRIMARY KEY AUTO_INCREMENT,
+    cliente_id INT,
+    fecha DATE NOT NULL,
+    total DECIMAL(10,2),
+    FOREIGN KEY (cliente_id) REFERENCES Clientes(cliente_id)
+);
+
+-- Tabla de detalle de pedidos (relación muchos a muchos)
+CREATE TABLE Detalle_Pedido (
+    detalle_id INT PRIMARY KEY AUTO_INCREMENT,
+    pedido_id INT,
+    producto_id INT,
+    cantidad INT NOT NULL,
+    subtotal DECIMAL(10,2),
+    FOREIGN KEY (pedido_id) REFERENCES Pedidos(pedido_id),
+    FOREIGN KEY (producto_id) REFERENCES Productos(producto_id)
+);
+
+-- Insertar algunos datos de ejemplo
+INSERT INTO Clientes (nombre, email, telefono, direccion) VALUES
+('Juan Pérez', 'juanperez@email.com', '987654321', 'Av. Los Olivos 123'),
+('María López', 'marialopez@email.com', '912345678', 'Jr. Las Flores 456');
+
+INSERT INTO Productos (nombre, descripcion, precio, stock) VALUES
+('Laptop Lenovo', 'Laptop i5, 8GB RAM, 512GB SSD', 2800.50, 10),
+('Mouse Logitech', 'Mouse inalámbrico', 85.00, 50),
+('Teclado Mecánico', 'Teclado retroiluminado', 150.00, 20);
+
+INSERT INTO Pedidos (cliente_id, fecha, total) VALUES
+(1, '2025-09-28', 2935.50);
+
+INSERT INTO Detalle_Pedido (pedido_id, producto_id, cantidad, subtotal) VALUES
+(1, 1, 1, 2800.50),
+(1, 2, 1, 85.00),
+(1, 3, 1, 150.00);
