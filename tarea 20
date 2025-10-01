@@ -1,0 +1,157 @@
+-- 1) Crear la base de datos (ejecutar como usuario con privilegios)
+-- CREATE DATABASE tienda;
+-- \c tienda   -- en psql para conectarse
+
+-- 2) Tablas
+CREATE TABLE customers (
+    customer_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(30),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE categories (
+    category_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT
+);
+
+CREATE TABLE suppliers (
+    supplier_id SERIAL PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    contact_email VARCHAR(255),
+    phone VARCHAR(30)
+);
+
+CREATE TABLE products (
+    product_id SERIAL PRIMARY KEY,
+    sku VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    price NUMERIC(10,2) NOT NULL CHECK (price >= 0),
+    category_id INT REFERENCES categories(category_id) ON DELETE SET NULL,
+    supplier_id INT REFERENCES suppliers(supplier_id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE inventory (
+    product_id INT PRIMARY KEY REFERENCES products(product_id) ON DELETE CASCADE,
+    quantity INT NOT NULL DEFAULT 0 CHECK (quantity >= 0),
+    last_restock TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE orders (
+    order_id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES customers(customer_id) ON DELETE SET NULL,
+    order_status VARCHAR(30) NOT NULL DEFAULT 'pending', -- pending, paid, shipped, cancelled
+    total_amount NUMERIC(12,2) NOT NULL CHECK (total_amount >= 0),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    shipped_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE order_items (
+    order_item_id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES orders(order_id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(product_id),
+    quantity INT NOT NULL CHECK (quantity > 0),
+    unit_price NUMERIC(10,2) NOT NULL CHECK (unit_price >= 0)
+);
+
+CREATE TABLE payments (
+    payment_id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES orders(order_id) ON DELETE CASCADE,
+    paid_amount NUMERIC(12,2) NOT NULL CHECK (paid_amount >= 0),
+    payment_method VARCHAR(50), -- e.g., card, paypal, cash
+    paid_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- 3) Índices útiles
+CREATE INDEX idx_products_category ON products(category_id);
+CREATE INDEX idx_orders_customer ON orders(customer_id);
+CREATE INDEX idx_inventory_quantity ON inventory(quantity);
+
+-- 4) Triggers / funciones (opcional): actualizar total_amount en orders al insertar order_items
+CREATE OR REPLACE FUNCTION update_order_total() RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE orders
+  SET total_amount = COALESCE((
+      SELECT SUM(quantity * unit_price) FROM order_items WHERE order_id = NEW.order_id
+  ), 0)
+  WHERE order_id = NEW.order_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_total_after_insert
+AFTER INSERT OR UPDATE OR DELETE ON order_items
+FOR EACH ROW EXECUTE FUNCTION update_order_total();
+
+-- 5) Datos de ejemplo
+INSERT INTO categories (name, description) VALUES
+('Electrónica', 'Dispositivos y accesorios'),
+('Ropa', 'Prendas y accesorios de vestir'),
+('Hogar', 'Artículos para el hogar');
+
+INSERT INTO suppliers (name, contact_email, phone) VALUES
+('Proveedor A', 'ventas@proveedora.com', '+51 999-000-111'),
+('Proveedor B', 'contacto@proveedorb.com', '+51 999-222-333');
+
+INSERT INTO products (sku, name, description, price, category_id, supplier_id) VALUES
+('SKU-1001', 'Auriculares inalámbricos', 'Auriculares bluetooth con cancelación de ruido', 79.90, 1, 1),
+('SKU-2001', 'Camiseta básica', 'Camiseta 100% algodón', 15.00, 2, 2),
+('SKU-3001', 'Juego de sábanas', 'Sábanas queen 200 hilos', 49.50, 3, 2);
+
+INSERT INTO inventory (product_id, quantity, last_restock) VALUES
+(1, 50, now() - interval '10 days'),
+(2, 200, now() - interval '3 days'),
+(3, 30, now() - interval '20 days');
+
+INSERT INTO customers (first_name, last_name, email, phone) VALUES
+('Miguel', 'Ángel', 'miguel@example.com', '+51 999-111-222'),
+('Lucina', 'Gómez', 'lucina@example.com', '+51 999-333-444');
+
+-- Crear un pedido de ejemplo
+INSERT INTO orders (customer_id, order_status, total_amount) VALUES (1, 'pending', 0);
+-- Obtener el id del pedido recién creado (en aplicaciones usar RETURNING)
+-- Supongamos order_id = 1
+INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (1, 1, 2, 79.90);
+INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (1, 2, 3, 15.00);
+
+-- El trigger actualizará total_amount automáticamente.
+-- Registrar un pago parcial
+INSERT INTO payments (order_id, paid_amount, payment_method) VALUES (1, 50.00, 'card');
+
+-- 6) Consultas útiles
+-- a) Ver detalles de un pedido
+SELECT o.order_id, o.order_status, o.created_at, o.total_amount,
+       c.first_name || ' ' || c.last_name AS customer,
+       json_agg(json_build_object('product_id', oi.product_id, 'quantity', oi.quantity, 'unit_price', oi.unit_price)) AS items
+FROM orders o
+LEFT JOIN customers c ON o.customer_id = c.customer_id
+LEFT JOIN order_items oi ON oi.order_id = o.order_id
+WHERE o.order_id = 1
+GROUP BY o.order_id, c.first_name, c.last_name;
+
+-- b) Productos con poco stock (menos de 10)
+SELECT p.product_id, p.name, i.quantity
+FROM products p
+JOIN inventory i ON p.product_id = i.product_id
+WHERE i.quantity < 10
+ORDER BY i.quantity ASC;
+
+-- c) Top 5 productos más vendidos (cantidad total)
+SELECT p.product_id, p.name, SUM(oi.quantity) AS total_sold
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+GROUP BY p.product_id, p.name
+ORDER BY total_sold DESC
+LIMIT 5;
+
+-- d) Ventas totales por día (últimos 30 días)
+SELECT date_trunc('day', o.created_at)::date AS day, SUM(o.total_amount) AS total_sales
+FROM orders o
+WHERE o.created_at >= now() - interval '30 days'
+GROUP BY 1
+ORDER BY 1 DESC;
