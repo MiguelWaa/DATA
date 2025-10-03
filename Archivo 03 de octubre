@@ -1,0 +1,84 @@
+-- Crear la base de datos
+CREATE DATABASE ColegioArequipa;
+USE ColegioArequipa;
+
+-- Tabla de Estudiantes
+CREATE TABLE Estudiantes (
+    id_estudiante INT PRIMARY KEY AUTO_INCREMENT,
+    dni VARCHAR(8) UNIQUE NOT NULL,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    fecha_nacimiento DATE NOT NULL,
+    direccion VARCHAR(200),
+    telefono VARCHAR(15),
+    grado INT NOT NULL,
+    seccion CHAR(1) NOT NULL
+);
+
+-- Tabla de Profesores
+CREATE TABLE Profesores (
+    id_profesor INT PRIMARY KEY AUTO_INCREMENT,
+    dni VARCHAR(8) UNIQUE NOT NULL,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    especialidad VARCHAR(100),
+    telefono VARCHAR(15),
+    correo VARCHAR(100)
+);
+
+-- Tabla de Cursos
+CREATE TABLE Cursos (
+    id_curso INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    grado INT NOT NULL
+);
+
+-- Tabla de Aulas
+CREATE TABLE Aulas (
+    id_aula INT PRIMARY KEY AUTO_INCREMENT,
+    codigo VARCHAR(10) UNIQUE NOT NULL,
+    capacidad INT NOT NULL,
+    grado INT NOT NULL,
+    seccion CHAR(1) NOT NULL
+);
+
+-- Tabla de Matrículas
+CREATE TABLE Matriculas (
+    id_matricula INT PRIMARY KEY AUTO_INCREMENT,
+    id_estudiante INT,
+    id_curso INT,
+    id_profesor INT,
+    id_aula INT,
+    anio YEAR NOT NULL,
+    FOREIGN KEY (id_estudiante) REFERENCES Estudiantes(id_estudiante),
+    FOREIGN KEY (id_curso) REFERENCES Cursos(id_curso),
+    FOREIGN KEY (id_profesor) REFERENCES Profesores(id_profesor),
+    FOREIGN KEY (id_aula) REFERENCES Aulas(id_aula)
+);
+
+-- Insertar algunos datos de ejemplo
+INSERT INTO Estudiantes (dni, nombres, apellidos, fecha_nacimiento, direccion, telefono, grado, seccion)
+VALUES
+('72013456', 'Luis', 'Huamani Quispe', '2008-05-10', 'Cerro Colorado, Arequipa', '987654321', 3, 'A'),
+('73124567', 'María', 'Condori Flores', '2007-09-22', 'Paucarpata, Arequipa', '912345678', 4, 'B');
+
+INSERT INTO Profesores (dni, nombres, apellidos, especialidad, telefono, correo)
+VALUES
+('45892314', 'Carlos', 'Zegarra Pinto', 'Matemáticas', '956234789', 'czegarra@colegioaqp.edu.pe'),
+('47651239', 'Rosa', 'Valdivia Torres', 'Comunicación', '954123678', 'rvaldivia@colegioaqp.edu.pe');
+
+INSERT INTO Cursos (nombre, descripcion, grado)
+VALUES
+('Matemáticas', 'Curso de Álgebra y Geometría', 3),
+('Comunicación', 'Curso de Lengua y Literatura', 4);
+
+INSERT INTO Aulas (codigo, capacidad, grado, seccion)
+VALUES
+('3A-01', 35, 3, 'A'),
+('4B-02', 40, 4, 'B');
+
+INSERT INTO Matriculas (id_estudiante, id_curso, id_profesor, id_aula, anio)
+VALUES
+(1, 1, 1, 1, 2025),
+(2, 2, 2, 2, 2025);
