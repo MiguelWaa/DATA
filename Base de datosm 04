@@ -1,0 +1,53 @@
+-- Creación de la base de datos
+CREATE DATABASE InkarmaDB;
+USE InkarmaDB;
+
+-- Tabla de departamentos
+CREATE TABLE Departamento (
+    idDepartamento INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    ubicacion VARCHAR(100)
+);
+
+-- Tabla de empleados
+CREATE TABLE Empleado (
+    idEmpleado INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    telefono VARCHAR(20),
+    fechaContratacion DATE,
+    idDepartamento INT,
+    salario DECIMAL(10,2),
+    FOREIGN KEY (idDepartamento) REFERENCES Departamento(idDepartamento)
+);
+
+-- Tabla de clientes
+CREATE TABLE Cliente (
+    idCliente INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    contacto VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    telefono VARCHAR(20)
+);
+
+-- Tabla de proyectos
+CREATE TABLE Proyecto (
+    idProyecto INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    fechaInicio DATE,
+    fechaFin DATE,
+    idCliente INT,
+    FOREIGN KEY (idCliente) REFERENCES Cliente(idCliente)
+);
+
+-- Tabla para asignar empleados a proyectos (relación muchos a muchos)
+CREATE TABLE EmpleadoProyecto (
+    idEmpleado INT,
+    idProyecto INT,
+    fechaAsignacion DATE,
+    PRIMARY KEY (idEmpleado, idProyecto),
+    FOREIGN KEY (idEmpleado) REFERENCES Empleado(idEmpleado),
+    FOREIGN KEY (idProyecto) REFERENCES Proyecto(idProyecto)
+);
