@@ -1,0 +1,45 @@
+-- Crear base de datos
+CREATE DATABASE ColegioDB;
+USE ColegioDB;
+
+-- Tabla de alumnos
+CREATE TABLE Alumnos (
+    id_alumno INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50),
+    apellido VARCHAR(50),
+    fecha_nacimiento DATE,
+    grado VARCHAR(10),
+    seccion CHAR(1)
+);
+
+-- Tabla de profesores
+CREATE TABLE Profesores (
+    id_profesor INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50),
+    apellido VARCHAR(50),
+    especialidad VARCHAR(50),
+    telefono VARCHAR(15)
+);
+
+-- Tabla de cursos
+CREATE TABLE Cursos (
+    id_curso INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_curso VARCHAR(50),
+    id_profesor INT,
+    FOREIGN KEY (id_profesor) REFERENCES Profesores(id_profesor)
+);
+
+-- Tabla de matrículas
+CREATE TABLE Matriculas (
+    id_matricula INT AUTO_INCREMENT PRIMARY KEY,
+    id_alumno INT,
+    id_curso INT,
+    año YEAR,
+    FOREIGN KEY (id_alumno) REFERENCES Alumnos(id_alumno),
+    FOREIGN KEY (id_curso) REFERENCES Cursos(id_curso)
+);
+
+-- Insertar datos en profesores
+INSERT INTO Profesores (nombre, apellido, especialidad, telefono) VALUES
+('María', 'Lopez', 'Matemática', '987654321'),
+('Carlos', 'Torres',
