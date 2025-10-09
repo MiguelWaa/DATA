@@ -1,0 +1,58 @@
+-- Crear base de datos de ejemplo
+CREATE DATABASE EjemploJoins;
+USE EjemploJoins;
+
+-- Crear tabla Empleados
+CREATE TABLE Empleados (
+    EmpleadoID INT PRIMARY KEY,
+    Nombre VARCHAR(50)
+);
+
+-- Crear tabla Departamentos
+CREATE TABLE Departamentos (
+    DepartamentoID INT PRIMARY KEY,
+    NombreDepartamento VARCHAR(50),
+    EmpleadoID INT -- jefe del departamento (relación opcional)
+);
+
+-- Insertar datos en Empleados
+INSERT INTO Empleados (EmpleadoID, Nombre) VALUES
+(1, 'Ana'),
+(2, 'Luis'),
+(3, 'Carlos');
+
+-- Insertar datos en Departamentos
+INSERT INTO Departamentos (DepartamentoID, NombreDepartamento, EmpleadoID) VALUES
+(10, 'Ventas', 1),
+(20, 'Marketing', NULL),
+(30, 'Producción', 4); -- EmpleadoID 4 no existe en Empleados
+
+-- 1. INNER JOIN: devuelve solo las filas donde hay coincidencia en ambas tablas
+SELECT e.EmpleadoID, e.Nombre, d.NombreDepartamento
+FROM Empleados e
+INNER JOIN Departamentos d ON e.EmpleadoID = d.EmpleadoID;
+-- Resultado: solo Ana (EmpleadoID=1), porque es la única coincidencia
+
+-- 2. LEFT JOIN: devuelve todas las filas de la tabla izquierda (Empleados)
+-- y las coincidencias en la tabla derecha (Departamentos), o NULL si no hay coincidencia
+SELECT e.EmpleadoID, e.Nombre, d.NombreDepartamento
+FROM Empleados e
+LEFT JOIN Departamentos d ON e.EmpleadoID = d.EmpleadoID;
+-- Resultado: Ana con 'Ventas', Luis y Carlos con NULL en departamento
+
+-- 3. CROSS JOIN: producto cartesiano de ambas tablas (todas las combinaciones posibles)
+SELECT e.Nombre AS Empleado, d.NombreDepartamento AS Departamento
+FROM Empleados e
+CROSS JOIN Departamentos d;
+-- Resultado: 3 empleados * 3 departamentos = 9 filas con todas las combinaciones
+
+-- 4. RIGHT JOIN: devuelve todas las filas de la tabla derecha (Departamentos)
+-- y las coincidencias en la tabla izquierda (Empleados), o NULL si no hay coincidencia
+SELECT e.EmpleadoID, e.Nombre, d.NombreDepartamento
+FROM Empleados e
+RIGHT JOIN Departamentos d ON e.EmpleadoID = d.EmpleadoID;
+-- Resultado: 
+-- - 'Ventas' con Ana (coincidencia)
+-- - 'Marketing' con NULL (no hay EmpleadoID)
+-- - 'Producción' con NULL (EmpleadoID 4 no existe en Empleados)
+
