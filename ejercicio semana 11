@@ -1,0 +1,83 @@
+-- Tabla de clientes
+CREATE TABLE clientes (
+    id_cliente INT PRIMARY KEY,
+    nombre VARCHAR(100),
+    email VARCHAR(100)
+);
+
+-- Tabla de productos
+CREATE TABLE productos (
+    id_producto INT PRIMARY KEY,
+    nombre VARCHAR(100),
+    precio DECIMAL(10, 2)
+);
+
+-- Tabla de ventas
+CREATE TABLE ventas (
+    id_venta INT PRIMARY KEY,
+    id_cliente INT,
+    fecha DATE,
+    FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente)
+);
+
+-- Tabla de detalles de venta (qué productos se vendieron en cada venta)
+CREATE TABLE detalle_venta (
+    id_detalle INT PRIMARY KEY,
+    id_venta INT,
+    id_producto INT,
+    cantidad INT,
+    FOREIGN KEY (id_venta) REFERENCES ventas(id_venta),
+    FOREIGN KEY (id_producto) REFERENCES productos(id_producto)
+);
+-- Insertar clientes
+INSERT INTO clientes VALUES
+(1, 'Ana Gómez', 'ana@example.com'),
+(2, 'Luis Pérez', 'luis@example.com');
+
+-- Insertar productos
+INSERT INTO productos VALUES
+(1, 'Laptop', 1200.00),
+(2, 'Mouse', 25.50),
+(3, 'Teclado', 45.00);
+
+-- Insertar ventas
+INSERT INTO ventas VALUES
+(1, 1, '2025-10-01'),
+(2, 2, '2025-10-03');
+
+-- Insertar detalles de ventas
+INSERT INTO detalle_venta VALUES
+(1, 1, 1, 1),  -- Ana compró 1 laptop
+(2, 1, 2, 2),  -- Ana compró 2 mouse
+(3, 2, 3, 1);  -- Luis compró 1 teclado
+-- Mostrar todas las ventas con nombre del cliente, producto, cantidad y total
+SELECT
+    v.id_venta,
+    c.nombre AS cliente,
+    p.nombre AS producto,
+    dv.cantidad,
+    (dv.cantidad * p.precio) AS total_producto
+FROM ventas v
+JOIN clientes c ON v.id_cliente = c.id_cliente
+JOIN detalle_venta dv ON v.id_venta = dv.id_venta
+JOIN productos p ON dv.id_producto = p.id_producto
+ORDER BY v.id_venta;
+-- Total gastado por cada cliente
+SELECT
+    c.nombre,
+    SUM(dv.cantidad * p.precio) AS total_gastado
+FROM clientes c
+JOIN ventas v ON c.id_cliente = v.id_cliente
+JOIN detalle_venta dv ON v.id_venta = dv.id_venta
+JOIN productos p ON dv.id_producto = p.id_producto
+GROUP BY c.nombre
+ORDER BY total_gastado DESC;
+-- Subir el precio del mouse
+UPDATE productos
+SET precio = 30.00
+WHERE nombre = 'Mouse';
+
+-- Eliminar un cliente (y sus ventas primero por clave foránea)
+DELETE FROM detalle_venta WHERE id_venta IN (SELECT id_venta FROM ventas WHERE id_cliente = 2);
+DELETE FROM ventas WHERE id_cliente = 2;
+DELETE FROM clientes WHERE id_cliente = 2;
