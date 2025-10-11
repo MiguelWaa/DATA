@@ -1,0 +1,43 @@
+-- Crear la base de datos
+CREATE DATABASE TiendaDB;
+
+-- Usar la base de datos
+USE TiendaDB;
+
+-- Tabla de Clientes
+CREATE TABLE Clientes (
+    ClienteID INT PRIMARY KEY AUTO_INCREMENT,
+    Nombre VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) UNIQUE,
+    Telefono VARCHAR(15),
+    FechaRegistro DATE DEFAULT CURRENT_DATE
+);
+
+-- Tabla de Productos
+CREATE TABLE Productos (
+    ProductoID INT PRIMARY KEY AUTO_INCREMENT,
+    Nombre VARCHAR(100) NOT NULL,
+    Descripcion TEXT,
+    Precio DECIMAL(10, 2) NOT NULL,
+    Stock INT NOT NULL
+);
+
+-- Tabla de Pedidos
+CREATE TABLE Pedidos (
+    PedidoID INT PRIMARY KEY AUTO_INCREMENT,
+    ClienteID INT,
+    FechaPedido DATE DEFAULT CURRENT_DATE,
+    Total DECIMAL(10, 2),
+    FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID)
+);
+
+-- Tabla de Detalles del Pedido (relación entre Pedidos y Productos)
+CREATE TABLE DetallePedido (
+    DetalleID INT PRIMARY KEY AUTO_INCREMENT,
+    PedidoID INT,
+    ProductoID INT,
+    Cantidad INT NOT NULL,
+    PrecioUnitario DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (PedidoID) REFERENCES Pedidos(PedidoID),
+    FOREIGN KEY (ProductoID) REFERENCES Productos(ProductoID)
+);
