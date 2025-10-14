@@ -1,0 +1,16 @@
+CREATE TABLE clientes (
+    cliente_id INT PRIMARY KEY AUTO_INCREMENT,         -- ID único y autoincremental
+    nombre VARCHAR(150) NOT NULL,                      -- Nombre completo, obligatorio
+    apellido VARCHAR(150) NOT NULL,                    -- Apellido, obligatorio
+    email VARCHAR(255) UNIQUE NOT NULL,                -- Email único y obligatorio
+    telefono VARCHAR(20),                              -- Teléfono opcional
+    fecha_nacimiento DATE,                             -- Fecha de nacimiento
+    genero CHAR(1) CHECK (genero IN ('M', 'F', 'O')), -- Género: M, F, O (otros)
+    direccion TEXT,                                    -- Dirección completa
+    ciudad VARCHAR(100),                               -- Ciudad
+    estado VARCHAR(100),                               -- Estado o región
+    codigo_postal VARCHAR(20),                         -- Código postal
+    pais VARCHAR(100) DEFAULT 'Chile',                 -- País, por defecto Chile
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,-- Fecha de registro, se llena automáticamente
+    activo BOOLEAN DEFAULT TRUE                         -- Cliente activo o no
+);
