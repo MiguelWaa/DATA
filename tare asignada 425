@@ -1,0 +1,51 @@
+import data nuevabasedata
+-- Crear base de datos (opcional)
+CREATE DATABASE tienda_online;
+USE tienda_online;
+
+-- Tabla: categorias
+CREATE TABLE categorias (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL
+);
+
+-- Tabla: productos
+CREATE TABLE productos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    precio DECIMAL(10, 2) NOT NULL,
+    stock INT NOT NULL,
+    categoria_id INT,
+    FOREIGN KEY (categoria_id) REFERENCES categorias(id)
+);
+
+-- Tabla: usuarios
+CREATE TABLE usuarios (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla: ordenes
+CREATE TABLE ordenes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    usuario_id INT,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+    total DECIMAL(10, 2),
+    estado ENUM('pendiente', 'pagado', 'enviado', 'entregado', 'cancelado') DEFAULT 'pendiente',
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
+
+-- Tabla: detalle_orden
+CREATE TABLE detalle_orden (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    orden_id INT,
+    producto_id INT,
+    cantidad INT,
+    precio_unitario DECIMAL(10, 2),
+    FOREIGN KEY (orden_id) REFERENCES ordenes(id),
+    FOREIGN KEY (producto_id) REFERENCES productos(id)
+);
