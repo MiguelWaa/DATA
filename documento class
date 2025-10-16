@@ -1,0 +1,38 @@
+-- Crear la base de datos
+CREATE DATABASE IF NOT EXISTS Tienda;
+USE Tienda;
+
+-- Tabla de clientes
+CREATE TABLE Clientes (
+    ClienteID INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) UNIQUE NOT NULL,
+    FechaRegistro DATE DEFAULT CURRENT_DATE
+);
+
+-- Tabla de productos
+CREATE TABLE Productos (
+    ProductoID INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(100) NOT NULL,
+    Precio DECIMAL(10,2) NOT NULL,
+    Stock INT NOT NULL
+);
+
+-- Tabla de órdenes
+CREATE TABLE Ordenes (
+    OrdenID INT AUTO_INCREMENT PRIMARY KEY,
+    ClienteID INT,
+    FechaOrden DATE DEFAULT CURRENT_DATE,
+    FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID)
+);
+
+-- Tabla de detalle de órdenes (relación muchos a muchos)
+CREATE TABLE DetalleOrden (
+    DetalleID INT AUTO_INCREMENT PRIMARY KEY,
+    OrdenID INT,
+    ProductoID INT,
+    Cantidad INT,
+    PrecioUnitario DECIMAL(10,2),
+    FOREIGN KEY (OrdenID) REFERENCES Ordenes(OrdenID),
+    FOREIGN KEY (ProductoID) REFERENCES Productos(ProductoID)
+);
