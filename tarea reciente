@@ -1,0 +1,70 @@
+-- Crear la base de datos
+CREATE DATABASE TiendaOnline;
+GO
+
+-- Usar la base de datos
+USE TiendaOnline;
+GO
+
+-- Tabla de clientes
+CREATE TABLE Clientes (
+    ClienteID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) UNIQUE NOT NULL,
+    Telefono NVARCHAR(20),
+    FechaRegistro DATETIME DEFAULT GETDATE()
+);
+GO
+
+-- Tabla de productos
+CREATE TABLE Productos (
+    ProductoID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    Descripcion NVARCHAR(255),
+    Precio DECIMAL(10,2) NOT NULL,
+    Stock INT DEFAULT 0
+);
+GO
+
+-- Tabla de pedidos
+CREATE TABLE Pedidos (
+    PedidoID INT PRIMARY KEY IDENTITY(1,1),
+    ClienteID INT NOT NULL,
+    FechaPedido DATETIME DEFAULT GETDATE(),
+    Total DECIMAL(10,2),
+    FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID)
+);
+GO
+
+-- Tabla de detalles del pedido (relación muchos a muchos entre Pedidos y Productos)
+CREATE TABLE DetallesPedido (
+    DetalleID INT PRIMARY KEY IDENTITY(1,1),
+    PedidoID INT NOT NULL,
+    ProductoID INT NOT NULL,
+    Cantidad INT NOT NULL,
+    PrecioUnitario DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (PedidoID) REFERENCES Pedidos(PedidoID),
+    FOREIGN KEY (ProductoID) REFERENCES Productos(ProductoID)
+);
+GO
+
+-- Tabla de empleados
+CREATE TABLE Empleados (
+    EmpleadoID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100),
+    Cargo NVARCHAR(50),
+    FechaContratacion DATE
+);
+GO
+
+-- Tabla de envíos
+CREATE TABLE Envios (
+    EnvioID INT PRIMARY KEY IDENTITY(1,1),
+    PedidoID INT NOT NULL,
+    EmpleadoID INT,
+    FechaEnvio DATE,
+    Estado NVARCHAR(50) DEFAULT 'Pendiente',
+    FOREIGN KEY (PedidoID) REFERENCES Pedidos(PedidoID),
+    FOREIGN KEY (EmpleadoID) REFERENCES Empleados(EmpleadoID)
+);
+GO
