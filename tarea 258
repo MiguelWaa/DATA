@@ -1,0 +1,111 @@
+-- Crear la base de datos
+CREATE DATABASE TiendaDB;
+GO
+
+-- Usar la base de datos
+USE TiendaDB;
+GO
+
+-- ==========================
+-- TABLA: Clientes
+-- ==========================
+CREATE TABLE Clientes (
+    ClienteID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) UNIQUE NOT NULL,
+    Telefono NVARCHAR(15),
+    Direccion NVARCHAR(200),
+    FechaRegistro DATETIME DEFAULT GETDATE()
+);
+GO
+
+-- ==========================
+-- TABLA: Categorías
+-- ==========================
+CREATE TABLE Categorias (
+    CategoriaID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(50) NOT NULL,
+    Descripcion NVARCHAR(200)
+);
+GO
+
+-- ==========================
+-- TABLA: Productos
+-- ==========================
+CREATE TABLE Productos (
+    ProductoID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    Precio DECIMAL(10,2) NOT NULL,
+    Stock INT NOT NULL,
+    CategoriaID INT,
+    FOREIGN KEY (CategoriaID) REFERENCES Categorias(CategoriaID)
+);
+GO
+
+-- ==========================
+-- TABLA: Empleados
+-- ==========================
+CREATE TABLE Empleados (
+    EmpleadoID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    Cargo NVARCHAR(50),
+    FechaContratacion DATE,
+    Salario DECIMAL(10,2)
+);
+GO
+
+-- ==========================
+-- TABLA: Ventas
+-- ==========================
+CREATE TABLE Ventas (
+    VentaID INT PRIMARY KEY IDENTITY(1,1),
+    ClienteID INT,
+    EmpleadoID INT,
+    FechaVenta DATETIME DEFAULT GETDATE(),
+    Total DECIMAL(10,2),
+    FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID),
+    FOREIGN KEY (EmpleadoID) REFERENCES Empleados(EmpleadoID)
+);
+GO
+
+-- ==========================
+-- TABLA: DetalleVentas
+-- ==========================
+CREATE TABLE DetalleVentas (
+    DetalleID INT PRIMARY KEY IDENTITY(1,1),
+    VentaID INT,
+    ProductoID INT,
+    Cantidad INT,
+    PrecioUnitario DECIMAL(10,2),
+    Subtotal AS (Cantidad * PrecioUnitario) PERSISTED,
+    FOREIGN KEY (VentaID) REFERENCES Ventas(VentaID),
+    FOREIGN KEY (ProductoID) REFERENCES Productos(ProductoID)
+);
+GO
+
+-- ==========================
+-- DATOS DE EJEMPLO
+-- ==========================
+INSERT INTO Categorias (Nombre, Descripcion) VALUES
+('Electrónica', 'Dispositivos y accesorios tecnológicos'),
+('Ropa', 'Prendas de vestir'),
+('Alimentos', 'Productos comestibles');
+
+INSERT INTO Productos (Nombre, Precio, Stock, CategoriaID) VALUES
+('Laptop HP', 2500.00, 10, 1),
+('Camiseta Nike', 90.00, 50, 2),
+('Pan Integral', 6.50, 100, 3);
+
+INSERT INTO Clientes (Nombre, Email, Telefono, Direccion) VALUES
+('Juan Pérez', 'juanperez@mail.com', '987654321', 'Av. Siempre Viva 123'),
+('Ana Torres', 'ana@mail.com', '998877665', 'Jr. Las Flores 456');
+
+INSERT INTO Empleados (Nombre, Cargo, FechaContratacion, Salario) VALUES
+('Carlos López', 'Vendedor', '2022-03-01', 1800.00),
+('María Díaz', 'Cajera', '2021-09-15', 1600.00);
+
+-- Ejemplo de una venta
+INSERT INTO Ventas (ClienteID, EmpleadoID, Total) VALUES (1, 1, 2586.50);
+INSERT INTO DetalleVentas (VentaID, ProductoID, Cantidad, PrecioUnitario) VALUES (1, 1, 1, 2500.00);
+INSERT INTO DetalleVentas (VentaID, ProductoID, Cantidad, PrecioUnitario) VALUES (1, 3, 10, 8.65);
+GO
