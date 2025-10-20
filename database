@@ -1,0 +1,30 @@
+-- 1️⃣ Crear base de datos (opcional)
+CREATE DATABASE TiendaDB;
+USE TiendaDB;
+
+-- 2️⃣ Crear tabla de ventas
+CREATE TABLE Ventas (
+    ID INT PRIMARY KEY IDENTITY(1,1),
+    Vendedor NVARCHAR(50),
+    Region NVARCHAR(50),
+    Monto DECIMAL(10,2)
+);
+
+-- 3️⃣ Insertar algunos datos
+INSERT INTO Ventas (Vendedor, Region, Monto) VALUES
+('Ana', 'Norte', 500),
+('Ana', 'Norte', 300),
+('Luis', 'Sur', 200),
+('Luis', 'Sur', 900),
+('Carla', 'Norte', 1500),
+('Carla', 'Sur', 400),
+('Pedro', 'Este', 700),
+('Pedro', 'Oeste', 100);
+
+-- 4️⃣ Consultar las ventas totales por vendedor
+SELECT 
+    Vendedor,
+    SUM(Monto) AS TotalVentas
+FROM Ventas
+GROUP BY Vendedor
+HAVING SUM(Monto) > 700;   -- 🔹 Muestra solo vendedores con ventas mayores a 700
