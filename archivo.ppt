@@ -1,0 +1,24 @@
+-- Crear una base de datos
+CREATE DATABASE Colegio;
+
+-- Usar la base de datos
+USE Colegio;
+
+-- Crear una tabla de estudiantes
+CREATE TABLE Estudiantes (
+    id_estudiante INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100),
+    apellido VARCHAR(100),
+    edad INT,
+    grado VARCHAR(20)
+);
+
+-- Insertar algunos registros
+INSERT INTO Estudiantes (nombre, apellido, edad, grado)
+VALUES
+('Luis', 'Torres', 14, '2° Secundaria'),
+('María', 'Flores', 13, '1° Secundaria'),
+('Jorge', 'Vega', 15, '3° Secundaria');
+
+-- Consultar los datos
+SELECT * FROM Estudiantes;
