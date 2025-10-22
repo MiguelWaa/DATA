@@ -1,0 +1,100 @@
+-- Crear base de datos
+CREATE DATABASE TiendaDB;
+GO
+
+-- Usar la base de datos
+USE TiendaDB;
+GO
+
+-- Crear tabla de clientes
+CREATE TABLE Clientes (
+    ClienteID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) UNIQUE,
+    Telefono NVARCHAR(20),
+    FechaRegistro DATE DEFAULT GETDATE()
+);
+GO
+
+-- Crear tabla de productos
+CREATE TABLE Productos (
+    ProductoID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    Categoria NVARCHAR(50),
+    Precio DECIMAL(10,2) NOT NULL,
+    Stock INT DEFAULT 0
+);
+GO
+
+-- Crear tabla de empleados
+CREATE TABLE Empleados (
+    EmpleadoID INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100),
+    Cargo NVARCHAR(50),
+    Sueldo DECIMAL(10,2)
+);
+GO
+
+-- Crear tabla de ventas
+CREATE TABLE Ventas (
+    VentaID INT PRIMARY KEY IDENTITY(1,1),
+    ClienteID INT,
+    EmpleadoID INT,
+    FechaVenta DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID),
+    FOREIGN KEY (EmpleadoID) REFERENCES Empleados(EmpleadoID)
+);
+GO
+
+-- Crear tabla de detalles de venta
+CREATE TABLE DetalleVenta (
+    DetalleID INT PRIMARY KEY IDENTITY(1,1),
+    VentaID INT,
+    ProductoID INT,
+    Cantidad INT,
+    PrecioUnitario DECIMAL(10,2),
+    FOREIGN KEY (VentaID) REFERENCES Ventas(VentaID),
+    FOREIGN KEY (ProductoID) REFERENCES Productos(ProductoID)
+);
+GO
+
+-- Insertar datos de ejemplo
+INSERT INTO Clientes (Nombre, Email, Telefono) VALUES
+('Juan Pérez', 'juan@gmail.com', '999111222'),
+('Ana Torres', 'ana@hotmail.com', '988222333'),
+('Carlos Rivas', 'carlos@yahoo.com', '977333444');
+
+INSERT INTO Productos (Nombre, Categoria, Precio, Stock) VALUES
+('Laptop Lenovo', 'Tecnología', 2500.00, 10),
+('Mouse Logitech', 'Accesorios', 80.00, 50),
+('Teclado Genius', 'Accesorios', 120.00, 30);
+
+INSERT INTO Empleados (Nombre, Cargo, Sueldo) VALUES
+('Laura Gómez', 'Vendedora', 1800.00),
+('José Ramírez', 'Cajero', 1600.00);
+
+INSERT INTO Ventas (ClienteID, EmpleadoID) VALUES
+(1, 1),
+(2, 2);
+
+INSERT INTO DetalleVenta (VentaID, ProductoID, Cantidad, PrecioUnitario) VALUES
+(1, 1, 1, 2500.00),
+(1, 2, 2, 80.00),
+(2, 3, 1, 120.00);
+GO
+
+-- Consultas útiles
+
+-- Mostrar todas las ventas con el nombre del cliente y del empleado
+SELECT V.VentaID, C.Nombre AS Cliente, E.Nombre AS Empleado, V.FechaVenta
+FROM Ventas V
+JOIN Clientes C ON V.ClienteID = C.ClienteID
+JOIN Empleados E ON V.EmpleadoID = E.EmpleadoID;
+
+-- Mostrar total vendido por cada cliente
+SELECT C.Nombre, SUM(DV.Cantidad * DV.PrecioUnitario) AS TotalComprado
+FROM Clientes C
+JOIN Ventas V ON C.ClienteID = V.ClienteID
+JOIN DetalleVenta DV ON V.VentaID = DV.VentaID
+GROUP BY C.Nombre
+HAVING SUM(DV.Cantidad * DV.PrecioUnitario) > 100;
