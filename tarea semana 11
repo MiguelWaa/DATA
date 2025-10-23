@@ -1,0 +1,152 @@
+/* ================================================================
+   DEMOSTRACIÓN COMPLETA: COUNT(), GROUP BY y HAVING
+   ================================================================
+   Este código crea una tabla llamada "ventas", inserta datos de ejemplo
+   y muestra cómo usar COUNT(), GROUP BY, WHERE y HAVING
+   para analizar la distribución de datos.
+================================================================== */
+
+CREACIÓN DE LA TABLA
+DROP TABLE IF EXISTS ventas;
+
+CREATE TABLE ventas (
+    id_venta INT PRIMARY KEY,
+    vendedor VARCHAR(50),
+    producto VARCHAR(50),
+    monto DECIMAL(10,2),
+    fecha DATE
+);
+
+INSERCIÓN DE DATOS DE EJEMPLO
+INSERT INTO ventas (id_venta, vendedor, producto, monto, fecha) VALUES
+(1, 'Ana', 'Laptop', 1200, '2025-01-05'),
+(2, 'Juan', 'Tablet', 800, '2025-01-06'),
+(3, 'Ana', 'Monitor', 300, '2025-01-07'),
+(4, 'Ana', 'Laptop', 1300, '2025-01-10'),
+(5, 'Juan', 'Laptop', 1100, '2025-01-11'),
+(6, 'Pedro', 'Teclado', 100, '2025-01-12'),
+(7, 'Lucía', 'Mouse', 80, '2025-01-13'),
+(8, 'Lucía', 'Monitor', 250, '2025-01-15'),
+(9, 'Juan', 'Tablet', 850, '2025-01-16'),
+(10, 'Ana', 'Laptop', 1250, '2025-02-01'),
+(11, 'Pedro', 'Mouse', 90, '2025-02-02'),
+(12, 'Pedro', 'Teclado', 100, '2025-02-03'),
+(13, 'Lucía', 'Laptop', 1400, '2025-02-05'),
+(14, 'Juan', 'Monitor', 400, '2025-02-06'),
+(15, 'Ana', 'Teclado', 120, '2025-02-07');
+
+-- ================================================================
+ EJEMPLO 1: USANDO COUNT() PARA CONTAR TODAS LAS VENTAS
+-- ================================================================
+SELECT COUNT(*) AS total_ventas
+FROM ventas;
+ COUNT() nos muestra cuántas filas hay en total en la tabla.
+
+-- ================================================================
+-- 📊 EJEMPLO 2: DISTRIBUCIÓN DE VENTAS POR VENDEDOR
+-- ================================================================
+SELECT 
+    vendedor,
+    COUNT(*) AS cantidad_ventas
+FROM 
+    ventas
+GROUP BY 
+    vendedor
+ORDER BY 
+    cantidad_ventas DESC;
+- Aquí usamos GROUP BY para agrupar por vendedor
+-- y COUNT() para contar cuántas ventas tiene cada uno.
+
+-- ================================================================
+-- 💰 EJEMPLO 3: TOTAL DE DINERO VENDIDO POR VENDEDOR
+-- ================================================================
+SELECT 
+    vendedor,
+    COUNT(*) AS total_ventas,
+    SUM(monto) AS monto_total,
+    ROUND(AVG(monto),2) AS promedio_venta
+FROM 
+    ventas
+GROUP BY 
+    vendedor
+ORDER BY 
+    monto_total DESC;
+- Ahora combinamos COUNT(), SUM() y AVG() para analizar ventas.
+
+-- ================================================================
+-- ⚙️ EJEMPLO 4: USANDO HAVING PARA FILTRAR GRUPOS
+-- ================================================================
+SELECT 
+    vendedor,
+    COUNT(*) AS total_ventas
+FROM 
+    ventas
+GROUP BY 
+    vendedor
+HAVING 
+    COUNT(*) >= 3
+ORDER BY 
+    total_ventas DESC;
+-- 👉 HAVING se aplica después de agrupar, 
+-- mientras que WHERE se aplica antes del GROUP BY.
+-- Solo muestra vendedores con 3 o más ventas.
+
+-- ================================================================
+-- 🧮 EJEMPLO 5: FILTRANDO POR FECHA CON WHERE + GROUP BY + HAVING
+-- ================================================================
+SELECT 
+    vendedor,
+    COUNT(*) AS ventas_enero,
+    SUM(monto) AS total_enero
+FROM 
+    ventas
+WHERE 
+    fecha BETWEEN '2025-01-01' AND '2025-01-31'
+GROUP BY 
+    vendedor
+HAVING 
+    COUNT(*) > 1
+ORDER BY 
+    ventas_enero DESC;
+- WHERE filtra las filas del mes de enero (antes de agrupar)
+-- HAVING filtra los grupos con más de 1 venta.
+
+-- ================================================================
+-- 🎯 EJEMPLO 6: DISTRIBUCIÓN POR PRODUCTO
+-- ================================================================
+SELECT 
+    producto,
+    COUNT(*) AS veces_vendido,
+    COUNT(DISTINCT vendedor) AS vendedores_diferentes
+FROM 
+    ventas
+GROUP BY 
+    producto
+ORDER BY 
+    veces_vendido DESC;
+-COUNT(DISTINCT vendedor) muestra cuántos vendedores distintos
+-- vendieron cada producto.
+
+-- ================================================================
+-- 🧾 EJEMPLO 7: RESUMEN FINAL POR VENDEDOR (TODO JUNTO)
+-- ================================================================
+SELECT 
+    vendedor,
+    COUNT(*) AS total_ventas,
+    COUNT(DISTINCT producto) AS productos_distintos,
+    SUM(monto) AS monto_total,
+    ROUND(AVG(monto), 2) AS promedio_venta
+FROM 
+    ventas
+GROUP BY 
+    vendedor
+HAVING 
+    SUM(monto) > 1000
+ORDER BY 
+    monto_total DESC;
+ Un resumen general:
+--    - COUNT(): número total de ventas
+--    - COUNT(DISTINCT): cuántos productos diferentes vendió
+--    - SUM(): monto total vendido
+--    - AVG(): promedio del monto
+--    - HAVING: filtra los que superan 1000 en ventas totales
