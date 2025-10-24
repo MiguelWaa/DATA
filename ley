@@ -1,0 +1,66 @@
+-- Crear base de datos
+CREATE DATABASE tienda_virtual;
+USE tienda_virtual;
+
+-- Crear tabla de clientes
+CREATE TABLE clientes (
+    id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100),
+    correo VARCHAR(100),
+    telefono VARCHAR(20)
+);
+
+-- Crear tabla de productos
+CREATE TABLE productos (
+    id_producto INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100),
+    categoria VARCHAR(50),
+    precio DECIMAL(10,2),
+    stock INT
+);
+
+-- Crear tabla de pedidos
+CREATE TABLE pedidos (
+    id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT,
+    fecha DATE,
+    total DECIMAL(10,2),
+    FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente)
+);
+
+-- Crear tabla detalle_pedido (relación muchos a muchos)
+CREATE TABLE detalle_pedido (
+    id_detalle INT AUTO_INCREMENT PRIMARY KEY,
+    id_pedido INT,
+    id_producto INT,
+    cantidad INT,
+    subtotal DECIMAL(10,2),
+    FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido),
+    FOREIGN KEY (id_producto) REFERENCES productos(id_producto)
+);
+
+-- Insertar datos de ejemplo
+INSERT INTO clientes (nombre, correo, telefono) VALUES
+('Miguel Ángel Machaca', 'miguel@gmail.com', '987654321'),
+('Ana Torres', 'ana@gmail.com', '912345678');
+
+INSERT INTO productos (nombre, categoria, precio, stock) VALUES
+('Laptop Lenovo', 'Tecnología', 2500.00, 10),
+('Mouse inalámbrico', 'Accesorios', 80.00, 50),
+('Teclado mecánico', 'Accesorios', 200.00, 30);
+
+-- Insertar pedido
+INSERT INTO pedidos (id_cliente, fecha, total) VALUES
+(1, '2025-10-24', 2580.00);
+
+-- Insertar detalle del pedido
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, subtotal) VALUES
+(1, 1, 1, 2500.00),
+(1, 2, 1, 80.00);
+
+-- Consulta con JOIN
+SELECT c.nombre AS Cliente, p.fecha AS Fecha, pr.nombre AS Producto, dp.cantidad, dp.subtotal
+FROM detalle_pedido dp
+JOIN pedidos p ON dp.id_pedido = p.id_pedido
+JOIN productos pr ON dp.id_producto = pr.id_producto
+JOIN clientes c ON p.id_cliente = c.id_cliente;
