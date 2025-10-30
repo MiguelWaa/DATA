@@ -1,0 +1,79 @@
+SELECT 
+    v.id_venta,
+    v.fecha_venta,
+    c.nombre AS cliente,
+    p.nombre_producto AS producto,
+    v.cantidad,
+    v.monto,
+    
+    -- Funciones de fecha
+    YEAR(v.fecha_venta) AS anio_venta,
+    MONTH(v.fecha_venta) AS mes_venta,
+    DAY(v.fecha_venta) AS dia_venta,
+    DATEDIFF(GETDATE(), v.fecha_venta) AS dias_desde_venta,  -- Diferencia de días desde la venta
+    DATEADD(DAY, 30, v.fecha_venta) AS fecha_limite_30_dias,  -- Sumar 30 días a la fecha de la venta
+
+    -- Cálculo del precio total de la venta
+    v.cantidad * p.precio AS precio_total,
+
+    -- Funciones de cadena
+    CONCAT('Venta #', v.id_venta, ' - ', p.nombre_producto) AS etiqueta_venta,  -- Concatenar ID de venta con nombre del producto
+    LEN(c.nombre) AS longitud_nombre_cliente,  -- Longitud del nombre del cliente
+    SUBSTRING(c.nombre, 1, 5) AS cliente_subcadena,  -- Primeros 5 caracteres del nombre del cliente
+    LOWER(c.nombre) AS cliente_minusculas,  -- Nombre del cliente en minúsculas
+    UPPER(p.nombre_producto) AS producto_mayusculas,  -- Nombre del producto en mayúsculas
+    LTRIM(RTRIM(c.direccion)) AS direccion_sin_espacios,  -- Eliminar espacios al inicio y al final de la dirección del cliente
+    
+    -- Funciones de conversión
+    CAST(v.monto AS varchar) AS monto_texto,  -- Convertir el monto a texto
+    CONVERT(varchar, v.fecha_venta, 103) AS fecha_formato_dia_mes_anio,  -- Convertir la fecha al formato 'dd/mm/yyyy'
+    
+    -- Subconsultas
+    -- Subconsulta con IN: Filtrar ventas que correspondan a productos de una categoría específica
+    CASE 
+        WHEN v.id_producto IN (
+            SELECT id_producto
+            FROM productos
+            WHERE categoria = 'Electrónica'
+        ) THEN 'Electrónica'
+        ELSE 'Otra categoría'
+    END AS categoria_producto,
+
+    -- Subconsulta con EXISTS: Verificar si el cliente ha realizado más de 5 compras en los últimos 30 días
+    CASE 
+        WHEN EXISTS (
+            SELECT 1
+            FROM ventas v2
+            WHERE v2.id_cliente = v.id_cliente
+            AND DATEDIFF(GETDATE(), v2.fecha_venta) <= 30
+        ) THEN 'Cliente frecuente'
+        ELSE 'Cliente ocasional'
+    END AS tipo_cliente,
+
+    -- Promedio de monto por cliente
+    (SELECT AVG(monto) 
+     FROM ventas v3 
+     WHERE v3.id_cliente = v.id_cliente) AS promedio_cliente,
+
+    -- Cálculo del total de ventas por producto
+    (SELECT SUM(v4.monto)
+     FROM ventas v4
+     WHERE v4.id_producto = v.id_producto) AS total_ventas_producto
+
+FROM ventas v
+JOIN clientes c ON v.id_cliente = c.id_cliente  -- Unir con la tabla de clientes
+JOIN productos p ON v.id_producto = p.id_producto  -- Unir con la tabla de productos
+
+-- Filtrar por ventas realizadas en el último mes
+WHERE v.fecha_venta >= DATEADD(MONTH, -1, GETDATE())
+
+-- Subconsulta con IN para productos que han generado más de $500 en ventas
+AND v.id_producto IN (
+    SELECT v2.id_producto
+    FROM ventas v2
+    GROUP BY v2.id_producto
+    HAVING SUM(v2.monto) > 500
+)
+
+-- Ordenar por fecha de venta más reciente
+ORDER BY v.fecha_venta DESC;
